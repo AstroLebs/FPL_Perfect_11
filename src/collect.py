@@ -1,21 +1,21 @@
 import hydra
 import requests
+import pickle
 import pandas as pd
 from omegaconf import DictConfig
-
 
 
 @hydra.main(config_path="../config", config_name="main", version_base=None)
 def collect_data(config: DictConfig):
     """Function to collect the data"""
-    collect_fpl_data()
-    collect_fbref_player()
-    get_historic_fpl()
-    get_fbref_team()
+    collect_fpl_data(config)
+    collect_fbref_team(config)
+    collect_fbref_player(config)
+    collect_fbref_scout(config)
+    get_historic_fpl(config)
 
 
-@hydra.main(config_path="../config", config_name="main", version_base=None)
-def collect_fpl_data(config: DictConfig) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame):
+def collect_fpl_data(config: DictConfig):
     print(f"Collecting data from FPL site")
     with requests.Session() as s:
         r = s.get(url=config.collect.fpl_url)
@@ -25,22 +25,21 @@ def collect_fpl_data(config: DictConfig) -> (pd.DataFrame, pd.DataFrame, pd.Data
     team_df = pd.DataFrame(json["teams"])
     pos_df = pd.DataFrame(json["element_types"])
 
-    player_df.to_csv("../data/raw/fpl_player.csv")
-    team_df.to_csv("../data/raw/fpl_team.csv")
-    pos_df.to_csv("../data/raw/fpl_pos.csv")
+    player_df.to_csv(f"../data/raw/fpl_player_{config.year}.csv")
+    team_df.to_csv(f"../data/raw/fpl_team_{config.year}.csv")
+    pos_df.to_csv(f"../data/raw/fpl_pos_{config.year}.csv")
 
     print(f"Collected data from FPL site")
-    return(player_df, team_df, pos_df)
 
-@hydra.main(config_path="../config", config_name="main", version_base=None)
+
 def collect_fbref_player(config: DictConfig):
     """Function to pull data from FBRef.com"""
 
-@hydra.main(config_path="../config", config_name="main", version_base=None)
+
 def collect_fbref_scout(config: DictConfig):
     """Function to collect scouting data from FBRef"""
 
-@hydra.main(config_path="../config", config_name="main", version_base=None)
+
 def get_historic_fpl(config: DictConfig):
     """
     Reads historic FPL from vaastav records hosted on github
@@ -55,51 +54,25 @@ def get_historic_fpl(config: DictConfig):
     return_df = pd.read_csv(url)
     return_df.to_csv("../data/raw/historic_fpl.csv")
 
-@hydra.main(config_path="../config", config_name="main", version_base=None)
-def get_fbref_team(config: DictConfig) -> (pd.DataFrame, pd.DataFrame):
-    """
-    Returns team and vs team data
-    """
-    raw_data = pd.read_html(config.collect.fbref_url)
 
-    raw_data[1].columns = raw_data[1].columns.map(lambda x: f"{x[0]}_{x[1]}")
-    squad = pd.merge(
-        raw_data[0],
-        raw_data[1],
-        left_index=True,
-        right_index=True,
+def collect_fbref_team(config: DictConfig):
+    raw_data = pd.read_html(
+        f"https://fbref.com/en/comps/9/{config.year-1}-{config.year}/{config.year}-{config.year}-Premier-League-Stats/"
     )
-    opponents = None
+    overall = raw_data[0]
+    home_away = raw_data[1]
 
-    for i, table in enumerate(raw_data[2:]):
-        try:
-            table.columns = table.columns.map(lambda x: f"{x[0]}_{x[1]}")
-        except Exception as e:
-            print(e)
-            pass
+    squad = raw_data[2::2]
+    opponent = raw_data[3::2]
 
-        if i % 2 == 0:
-            squad = pd.merge(
-                squad, table, left_on="Squad",
-                right_on="Unnamed: 0_level_0_Squad"
-            )
-        else:
-            if opponents is None:
-                opponents = table
-                continue
-            else:
-                opponents = pd.merge(
-                    opponents,
-                    table,
-                    left_on="Unnamed: 0_level_0_Squad",
-                    right_on="Unnamed: 0_level_0_Squad",
-                )
+    overall.to_csv(f"../data/raw/overall_{config.year}.csv")
+    home_away.to_csv(f"../data/raw/home_away_{config.year}.csv")d
 
-    squad = squad.T.drop_duplicates().T
-    opponents = opponents.T.drop_duplicates().T
+    with open(f"../data/raw/squad_{config.year}.pickle", "wb") as f:
+        pickle.dump(squad, f)
 
-    return (squad, opponents)
-
+    with open(f"../data/raw/opponent_{config.year}.pickle", "wb") as f:
+        pickle.dump(opponent, f)
 
 
 if __name__ == "__main__":

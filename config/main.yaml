@@ -12,6 +12,7 @@ collect:
   year: 2024
   fpl_url: https://fantasy.premierleague.com/api/bootstrap-static/
   fpl_hist: https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data/
+  fbref_url: https://fbref.com/en/comps/9/2021-2022/2021-2022-Premier-League-Stats/
 
 data:
   raw: data/raw/sample.csv
