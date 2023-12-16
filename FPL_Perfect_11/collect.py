@@ -8,10 +8,22 @@ from bs4 import BeautifulSoup
 from time import sleep
 import re
 import json
+import os
+import logging
 
 @hydra.main(config_path="../config", config_name="main", version_base=None)
 def collect_data(config: DictConfig):
     """Function to collect the data"""
+    logging.basicConfig(filename='Collect.log', level=logging.DEBUG, format='%(asctime)s %(levelname)s %(name)s %(message)s')
+    logger=logging.getLogger(__name__)
+
+    try:
+        os.makedirs(f"../{config.data.raw}{config.collect.year}/")
+    except FileExistsError as e:
+        pass
+    except Exception as err:
+        logger.error(err)
+    
     collect_fpl_data(config)
     collect_fbref_team(config)
     collect_fbref_player(config)
@@ -21,12 +33,14 @@ def collect_data(config: DictConfig):
 
 def collect_fpl_data(config: DictConfig):
     print("Collecting data from FPL site...")
+    filename = f"../{config.data.raw}{config.collect.year}/"
+
     with requests.Session() as s:
         r = s.get(url=config.collect.fpl_url)
         j = r.json()
 
     for key in j.keys():
-        with open (f'../data/raw/FPL_Data_{key}_{config.collect.year}.json', 'w', encoding = 'utf-8') as f:
+        with open (f'{filename}FPL_DATA_{key}.json', 'w', encoding = 'utf-8') as f:
             json.dump(j[key], f, ensure_ascii = False, indent = 4)
 
     print("Collected data from FPL site")
@@ -123,13 +137,13 @@ def collect_historic_fpl(config: DictConfig):
     print("Collecting historic FPL data...")
     url = (
         config.collect.fpl_hist
-        + str(config.collect.year - 1)
+        + str(config.collect.year - 2)
         + "-"
-        + str(config.collect.year - 2000)
+        + str(config.collect.year - 2001)
         + "/cleaned_players.csv"
     )
     return_df = pd.read_csv(url)
-    return_df.to_csv(f"../data/raw/historic_fpl_{config.collect.year}.csv")
+    return_df.to_csv(f"../{config.data.raw}{config.collect.year}/previous_season_fpl.csv")
     print("Collected historic FPL data")
 
 

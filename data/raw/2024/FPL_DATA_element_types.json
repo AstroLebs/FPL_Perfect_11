@@ -12,7 +12,7 @@
         "sub_positions_locked": [
             12
         ],
-        "element_count": 86
+        "element_count": 87
     },
     {
         "id": 2,
@@ -25,7 +25,7 @@
         "squad_max_play": 5,
         "ui_shirt_specific": false,
         "sub_positions_locked": [],
-        "element_count": 243
+        "element_count": 245
     },
     {
         "id": 3,
@@ -38,7 +38,7 @@
         "squad_max_play": 5,
         "ui_shirt_specific": false,
         "sub_positions_locked": [],
-        "element_count": 324
+        "element_count": 328
     },
     {
         "id": 4,
