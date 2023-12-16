@@ -6,7 +6,6 @@ authors = ["Caleb Ward"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-dvc = {extras = ["ssh"], version = "^3.33.4"}
 hydra-core = "^1.1.1"
 pdoc3 = "^0.10.0"
 pandas = "^2.0.3"
